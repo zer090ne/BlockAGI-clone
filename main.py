@@ -100,8 +100,8 @@ def on_startup():
         target=target,
         kwargs=dict(
             agent_role=app.state.blockagi_state.agent_role,
-            openai_api_key=app.state.openai_api_key,
-            openai_model=app.state.openai_model,
+            groq_api_key=app.state.groq_api_key,
+            groq_model=app.state.groq_model,
             resource_pool=app.state.resource_pool,
             objectives=app.state.blockagi_state.objectives,
             blockagi_callback=BlockAGICallback(app.state.blockagi_state),
@@ -168,8 +168,8 @@ def main(
     agent_role: str = typer.Option(envvar="BLOCKAGI_AGENT_ROLE"),
     iteration_count: int = typer.Option(envvar="BLOCKAGI_ITERATION_COUNT"),
     objectives: list[str] = typer.Option(None, "--objectives", "-o"),
-    openai_api_key: str = typer.Option(envvar="OPENAI_API_KEY"),
-    openai_model: str = typer.Option(envvar="OPENAI_MODEL"),
+    groq_api_key: str = typer.Option(envvar="GROQ_API_KEY"),
+    groq_model: str = typer.Option(envvar="GROQ_MODEL"),
 ):
     app.state.host = host
     app.state.port = port
@@ -181,8 +181,8 @@ def main(
     if not objectives:
         raise ValueError("No objectives specified")
 
-    app.state.openai_api_key = openai_api_key
-    app.state.openai_model = openai_model
+    app.state.groq_api_key = groq_api_key
+    app.state.groq_model = groq_model
     app.state.iteration_count = iteration_count
     app.state.blockagi_state = BlockAGIState(
         start_time=datetime.utcnow().isoformat(),
@@ -192,7 +192,7 @@ def main(
         historical_steps=[],
         agent_logs=[
             AgentLog(datetime.utcnow().isoformat(), 0, f"You are {agent_role}"),
-            AgentLog(datetime.utcnow().isoformat(), 0, f"Using {openai_model}"),
+            AgentLog(datetime.utcnow().isoformat(), 0, f"Using {groq_model}"),
         ],
         objectives=[Objective(topic=topic, expertise=0.0) for topic in objectives],
         findings=[],
