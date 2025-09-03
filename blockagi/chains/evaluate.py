@@ -95,7 +95,41 @@ class EvaluateChain(CustomCallbackLLMChain):
 
         response = self.retry_llm(messages)
 
-        result = json.loads(response.content)
+        # Clean and parse response content
+        content = response.content.strip()
+        
+        # Try to extract JSON from response
+        try:
+            # First try direct parsing
+            result = json.loads(content)
+        except json.JSONDecodeError as e:
+            self.fire_log(f"JSON parsing failed: {e}")
+            self.fire_log(f"Response content: {content[:200]}...")
+            
+            # Try to extract JSON from markdown code blocks
+            import re
+            json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', content, re.DOTALL)
+            if json_match:
+                try:
+                    result = json.loads(json_match.group(1))
+                    self.fire_log("Successfully extracted JSON from code block")
+                except json.JSONDecodeError:
+                    self.fire_log("Failed to parse JSON from code block")
+                    raise
+            else:
+                # Try to find JSON-like content
+                brace_start = content.find('{')
+                brace_end = content.rfind('}')
+                if brace_start != -1 and brace_end != -1:
+                    try:
+                        json_content = content[brace_start:brace_end + 1]
+                        result = json.loads(json_content)
+                        self.fire_log("Successfully extracted JSON from content")
+                    except json.JSONDecodeError:
+                        self.fire_log("Failed to parse extracted JSON content")
+                        raise
+                else:
+                    raise json.JSONDecodeError("No JSON content found in response", content, 0)
 
         updated_findings = Findings(
             generated_objectives=[
