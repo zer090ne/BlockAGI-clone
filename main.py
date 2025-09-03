@@ -87,28 +87,41 @@ class BlockAGIState:
 
 @app.on_event("startup")
 def on_startup():
+    print("INFO: Starting agent startup thread...")
     app.state.resource_pool = ResourcePool()
 
     def target(**kwargs):
         try:
+            print("INFO: Agent thread started, calling run_blockagi...")
+            print(f"INFO: Thread kwargs: {kwargs}")
             run_blockagi(**kwargs)
         except Exception as e:
+            print(f"ERROR: Agent startup failed: {e}")
+            import traceback
+            traceback.print_exc()
             app.state.blockagi_state.add_agent_log(f"Error: {e}")
         app.state.blockagi_state.end_time = datetime.utcnow().isoformat()
 
+    # Prepare kwargs for thread
+    thread_kwargs = dict(
+        agent_role=app.state.blockagi_state.agent_role,
+        groq_api_key=app.state.groq_api_key,
+        groq_model=app.state.groq_model,
+        resource_pool=app.state.resource_pool,
+        objectives=app.state.blockagi_state.objectives,
+        blockagi_callback=BlockAGICallback(app.state.blockagi_state),
+        llm_callback=LLMCallback(app.state.blockagi_state),
+        iteration_count=app.state.iteration_count,
+    )
+    
+    print(f"INFO: Thread kwargs prepared: {thread_kwargs}")
+    
     threading.Thread(
         target=target,
-        kwargs=dict(
-            agent_role=app.state.blockagi_state.agent_role,
-            groq_api_key=app.state.groq_api_key,
-            groq_model=app.state.groq_model,
-            resource_pool=app.state.resource_pool,
-            objectives=app.state.blockagi_state.objectives,
-            blockagi_callback=BlockAGICallback(app.state.blockagi_state),
-            llm_callback=LLMCallback(app.state.blockagi_state),
-            iteration_count=app.state.iteration_count,
-        ),
+        kwargs=thread_kwargs,
     ).start()
+    
+    print("INFO: Agent startup thread started successfully")
     webbrowser.open(f"http://{app.state.host}:{app.state.port}")
 
 
