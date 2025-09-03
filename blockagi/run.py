@@ -7,7 +7,7 @@ from blockagi.tools import (
     GoogleSearchLinksTool,
     VisitWebTool,
 )
-from groq import Groq
+from langchain_groq import ChatGroq
 
 
 def run_blockagi(
@@ -40,13 +40,14 @@ def run_blockagi(
     )
 
     # Menggunakan GROQ API sebagai pengganti OpenAI
-    llm = Groq(
-        api_key=groq_api_key,
-        model=groq_model,  # misal: "llama3-8b-8192", "mixtral-8x7b-32768"
+    llm = ChatGroq(
+        groq_api_key=groq_api_key,
+        model_name=groq_model,
         temperature=0.8,
         streaming=True,
-        callbacks=[llm_callback],
     )
+    
+    blockagi_callback.on_log_message(f"GROQ client initialized with model: {groq_model}")
 
     inputs = {
         "objectives": objectives,
