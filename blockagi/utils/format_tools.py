@@ -10,7 +10,7 @@ def generate_schema_dict(pydantic_model):
     defaults = {
         name: field.default
         for name, field in pydantic_model.__fields__.items()
-        if not field.required
+        if not getattr(field, 'required', getattr(field, 'is_required', False))
     }
 
     result = {}
