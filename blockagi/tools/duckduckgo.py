@@ -1,7 +1,7 @@
 from itertools import islice
 from typing import Optional, Type
 
-from langchain.tools import DuckDuckGoSearchRun
+from langchain_community.tools import DuckDuckGoSearchRun
 from langchain.tools import Tool
 from pydantic import BaseModel, Field
 from langchain.tools.base import BaseTool
@@ -43,8 +43,8 @@ class SearchLinksSchema(BaseModel):
 
 
 class DDGSearchLinksTool(BaseTool):
-    name = "DuckDuckGoSearchLinks"
-    description = "Useful for when you need more links to website that points to information about a TOPIC over the internet using DuckDuckGo."
+    name: str = "DuckDuckGoSearchLinks"
+    description: str = "Useful for when you need more links to website that points to information about a TOPIC over the internet using DuckDuckGo."
     args_schema: Type[SearchLinksSchema] = SearchLinksSchema
     resource_pool: BaseResourcePool = None
 

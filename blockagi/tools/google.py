@@ -18,8 +18,8 @@ class GoogleLinksSchema(BaseModel):
 
 
 class GoogleSearchLinksTool(BaseTool):
-    name = "GoogleSearchLinks"
-    description = "Useful for when you need more links to website that points to information about a TOPIC over the internet using Google."
+    name: str = "GoogleSearchLinks"
+    description: str = "Useful for when you need more links to website that points to information about a TOPIC over the internet using Google."
     args_schema: Type[GoogleLinksSchema] = GoogleLinksSchema
     resource_pool: BaseResourcePool = None
 
