@@ -173,6 +173,11 @@ def main(
 ):
     app.state.host = host
     app.state.port = port
+    
+    # Inisialisasi objectives sebagai list kosong jika None
+    if objectives is None:
+        objectives = []
+        
     if not objectives:
         for index in range(1, 11):
             key = f"BLOCKAGI_OBJECTIVE_{index}"
