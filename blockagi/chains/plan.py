@@ -94,13 +94,49 @@ class PlanChain(CustomCallbackLLMChain):
 
         response = self.retry_llm(messages)
 
+        # Clean and parse response content
+        content = response.content.strip()
+        
+        # Try to extract JSON from response
+        try:
+            # First try direct parsing
+            tasks_data = json.loads(content)
+        except json.JSONDecodeError as e:
+            self.fire_log(f"JSON parsing failed: {e}")
+            self.fire_log(f"Response content: {content[:200]}...")
+            
+            # Try to extract JSON from markdown code blocks
+            import re
+            json_match = re.search(r'```(?:json)?\s*(\[.*?\])\s*```', content, re.DOTALL)
+            if json_match:
+                try:
+                    tasks_data = json.loads(json_match.group(1))
+                    self.fire_log("Successfully extracted JSON array from code block")
+                except json.JSONDecodeError:
+                    self.fire_log("Failed to parse JSON array from code block")
+                    raise
+            else:
+                # Try to find JSON-like content
+                brace_start = content.find('[')
+                brace_end = content.rfind(']')
+                if brace_start != -1 and brace_end != -1:
+                    try:
+                        json_content = content[brace_start:brace_end + 1]
+                        tasks_data = json.loads(json_content)
+                        self.fire_log("Successfully extracted JSON array from content")
+                    except json.JSONDecodeError:
+                        self.fire_log("Failed to parse extracted JSON array content")
+                        raise
+                else:
+                    raise json.JSONDecodeError("No JSON array content found in response", content, 0)
+
         research_tasks = [
             ResearchTask(
                 tool=task["tool"],
                 args=task["args"],
                 reasoning=task["reasoning"],
             )
-            for task in json.loads(response.content)
+            for task in tasks_data
         ]
 
         return {"research_tasks": research_tasks}
